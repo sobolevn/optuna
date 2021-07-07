@@ -184,6 +184,22 @@ class CmaEsSampler(BaseSampler):
                 versions without prior notice. See
                 https://github.com/optuna/optuna/releases/tag/v2.6.0.
 
+        constant_liar:
+            If :obj:`True`, penalize running trials to avoid suggesting parameter configurations
+            nearby.
+
+            .. note::
+                It is recommended to set this value to :obj:`True` during distributed
+                optimization to avoid having multiple workers evaluating similar parameter
+                configurations. In particular, if each objective function evaluation is costly
+                and the durations of the running states are significant, and/or the number of
+                workers is high.
+
+            .. note::
+                Added in v2.9.0 as an experimental feature. The interface may change in newer
+                versions without prior notice. See
+                https://github.com/optuna/optuna/releases/tag/v2.9.0.
+
     Raises:
         ValueError:
             If ``restart_strategy`` is not 'ipop' or :obj:`None`.
@@ -203,6 +219,7 @@ class CmaEsSampler(BaseSampler):
         inc_popsize: int = 2,
         use_separable_cma: bool = False,
         source_trials: Optional[List[FrozenTrial]] = None,
+        constant_liar: bool = False,
     ) -> None:
         self._x0 = x0
         self._sigma0 = sigma0
@@ -216,6 +233,7 @@ class CmaEsSampler(BaseSampler):
         self._inc_popsize = inc_popsize
         self._use_separable_cma = use_separable_cma
         self._source_trials = source_trials
+        self._constant_liar = constant_liar
 
         if self._restart_strategy:
             warnings.warn(
@@ -266,6 +284,13 @@ class CmaEsSampler(BaseSampler):
                 "restart_strategy={} is unsupported. Please specify: 'ipop' or None.".format(
                     restart_strategy
                 )
+            )
+
+        if self._constant_liar:
+            warnings.warn(
+                "`constant_liar` option is an experimental feature."
+                " The interface can change in the future.",
+                ExperimentalWarning,
             )
 
     def reseed_rng(self) -> None:
@@ -541,6 +566,11 @@ class CmaEsSampler(BaseSampler):
                 # We rewrite the value of the trial `t` for sampling, so we need a deepcopy.
                 copied_t = copy.deepcopy(t)
                 copied_t.value = value
+                complete_trials.append(copied_t)
+            elif t.state == TrialState.RUNNING and self._constant_liar:
+                sign = 1 if study.direction == StudyDirection.MINIMIZE else -1
+                copied_t = copy.deepcopy(t)
+                copied_t.value = sign * float("inf")
                 complete_trials.append(copied_t)
         return complete_trials
 
