@@ -1,3 +1,4 @@
+from optuna.integration.botorch import BoTorchSampler
 from optuna.samplers._base import BaseSampler
 from optuna.samplers._cmaes import CmaEsSampler
 from optuna.samplers._grid import GridSampler
@@ -18,6 +19,7 @@ from optuna.samplers._tpe.sampler import TPESampler
 
 __all__ = [
     "BaseSampler",
+    "BoTorchSampler",
     "CmaEsSampler",
     "GridSampler",
     "IntersectionSearchSpace",
