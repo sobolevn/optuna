@@ -14,10 +14,12 @@ from optuna.samplers._search_space import intersection_search_space
 from optuna.samplers._search_space import IntersectionSearchSpace
 from optuna.samplers._tpe.multi_objective_sampler import MOTPESampler
 from optuna.samplers._tpe.sampler import TPESampler
+from optuna.samplers.botorch import BoTorchSampler
 
 
 __all__ = [
     "BaseSampler",
+    "BoTorchSampler",
     "CmaEsSampler",
     "GridSampler",
     "IntersectionSearchSpace",
